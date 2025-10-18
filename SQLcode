@@ -1,0 +1,30 @@
+-- Clientes
+INSERT INTO Cliente (Nome, TipoPessoa, CPF, Email) VALUES 
+('João Silva','PF','12345678901','joao@email.com'),
+('Empresa X','PJ',NULL,'empresa@email.com','12345678000199');
+
+-- Fornecedores
+INSERT INTO Fornecedor (Nome, CNPJ, Telefone, Email) VALUES
+('Fornecedor A','11122233344455','11123456789','fornecedorA@email.com'),
+('Fornecedor B','22233344455566','11987654321','fornecedorB@email.com');
+
+-- Produtos
+INSERT INTO Produto (Nome, Descricao, Preco, Estoque, FornecedorID) VALUES
+('Produto 1','Descrição 1',50.00,100,1),
+('Produto 2','Descrição 2',150.00,50,2);
+
+-- Pedidos
+INSERT INTO Pedido (ClienteID, StatusPedido) VALUES (1,'Aguardando');
+
+-- ItensPedido
+INSERT INTO ItemPedido (PedidoID, ProdutoID, Quantidade, PrecoUnitario) VALUES
+(1,1,2,50.00),
+(1,2,1,150.00);
+
+-- Pagamento
+INSERT INTO Pagamento (PedidoID, TipoPagamento, Valor, StatusPagamento, DataPagamento) VALUES
+(1,'Cartao',250.00,'Confirmado',NOW());
+
+-- Entrega
+INSERT INTO Entrega (PedidoID, StatusEntrega, CodigoRastreio, DataEnvio, DataEntregaPrevista) VALUES
+(1,'Enviado','ABC123456',NOW(),DATE_ADD(NOW(),INTERVAL 5 DAY));
