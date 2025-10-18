@@ -1,0 +1,100 @@
+CREATE DATABASE ECommerceDB;
+USE ECommerceDB;
+
+-- Tabela Cliente
+CREATE TABLE Cliente (
+    ClienteID INT AUTO_INCREMENT PRIMARY KEY,
+    Nome VARCHAR(100) NOT NULL,
+    TipoPessoa ENUM('PF','PJ') NOT NULL,
+    CPF CHAR(11),
+    CNPJ CHAR(14),
+    Email VARCHAR(100),
+    Telefone VARCHAR(15),
+    DataCadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_pessoa CHECK (
+        (TipoPessoa='PF' AND CPF IS NOT NULL AND CNPJ IS NULL) OR
+        (TipoPessoa='PJ' AND CNPJ IS NOT NULL AND CPF IS NULL)
+    )
+);
+
+-- Tabela Endereco
+CREATE TABLE Endereco (
+    EnderecoID INT AUTO_INCREMENT PRIMARY KEY,
+    ClienteID INT NOT NULL,
+    Rua VARCHAR(150),
+    Numero VARCHAR(10),
+    Complemento VARCHAR(50),
+    Cidade VARCHAR(50),
+    Estado CHAR(2),
+    CEP CHAR(8),
+    TipoEndereco ENUM('Entrega','Cobranca'),
+    FOREIGN KEY (ClienteID) REFERENCES Cliente(ClienteID)
+);
+
+-- Tabela Fornecedor
+CREATE TABLE Fornecedor (
+    FornecedorID INT AUTO_INCREMENT PRIMARY KEY,
+    Nome VARCHAR(100),
+    CNPJ CHAR(14),
+    Telefone VARCHAR(15),
+    Email VARCHAR(100)
+);
+
+-- Tabela Produto
+CREATE TABLE Produto (
+    ProdutoID INT AUTO_INCREMENT PRIMARY KEY,
+    Nome VARCHAR(100),
+    Descricao TEXT,
+    Preco DECIMAL(10,2),
+    Estoque INT,
+    FornecedorID INT,
+    FOREIGN KEY (FornecedorID) REFERENCES Fornecedor(FornecedorID)
+);
+
+-- Tabela Pedido
+CREATE TABLE Pedido (
+    PedidoID INT AUTO_INCREMENT PRIMARY KEY,
+    ClienteID INT NOT NULL,
+    DataPedido DATETIME DEFAULT CURRENT_TIMESTAMP,
+    StatusPedido ENUM('Aguardando','Pago','Enviado','Entregue','Cancelado'),
+    TotalPedido DECIMAL(10,2) AS (
+        (SELECT COALESCE(SUM(Quantidade*PrecoUnitario),0)
+         FROM ItemPedido WHERE ItemPedido.PedidoID = Pedido.PedidoID)
+    ) STORED,
+    FOREIGN KEY (ClienteID) REFERENCES Cliente(ClienteID)
+);
+
+-- Tabela ItemPedido
+CREATE TABLE ItemPedido (
+    ItemPedidoID INT AUTO_INCREMENT PRIMARY KEY,
+    PedidoID INT NOT NULL,
+    ProdutoID INT NOT NULL,
+    Quantidade INT NOT NULL,
+    PrecoUnitario DECIMAL(10,2) NOT NULL,
+    Subtotal DECIMAL(10,2) AS (Quantidade*PrecoUnitario) STORED,
+    FOREIGN KEY (PedidoID) REFERENCES Pedido(PedidoID),
+    FOREIGN KEY (ProdutoID) REFERENCES Produto(ProdutoID)
+);
+
+-- Tabela Pagamento
+CREATE TABLE Pagamento (
+    PagamentoID INT AUTO_INCREMENT PRIMARY KEY,
+    PedidoID INT NOT NULL,
+    TipoPagamento ENUM('Cartao','Boleto','Pix'),
+    Valor DECIMAL(10,2),
+    StatusPagamento ENUM('Pendente','Confirmado','Recusado'),
+    DataPagamento DATETIME,
+    FOREIGN KEY (PedidoID) REFERENCES Pedido(PedidoID)
+);
+
+-- Tabela Entrega
+CREATE TABLE Entrega (
+    EntregaID INT AUTO_INCREMENT PRIMARY KEY,
+    PedidoID INT NOT NULL,
+    StatusEntrega ENUM('Preparando','Enviado','Entregue','Atrasado'),
+    CodigoRastreio VARCHAR(50),
+    DataEnvio DATETIME,
+    DataEntregaPrevista DATETIME,
+    DataEntregaReal DATETIME,
+    FOREIGN KEY (PedidoID) REFERENCES Pedido(PedidoID)
+);
